@@ -1,0 +1,29 @@
+
+# Use a base image with .NET SDK
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+
+# Install Protocol Buffers (protoc) and any other dependencies required for your project
+RUN apt-get update && apt-get install -y protobuf-compiler
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the entire C# project directory into the container
+COPY csharp_project /app/csharp_project
+COPY protoTest /app/protoTest
+
+# Change to the C# project directory
+WORKDIR /app/csharp_project/SCGTestCSharp
+
+# Compile the .proto file and generate C# code
+RUN protoc \
+    -I=/app/protoTest/protodef/ \
+    --csharp_out=/app/csharp_project/SCGTestCSharp/SCGTestCSharp/csharp_out/ \
+    /app/protoTest/protodef/scg_test.proto
+
+# Build the C# project
+RUN dotnet build
+
+# Run the compiled C# assembly
+CMD ["dotnet", "run", "--project", "SCGTestCSharp/SCGTestCSharp.csproj"]
+

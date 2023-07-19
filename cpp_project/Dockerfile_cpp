@@ -1,0 +1,34 @@
+# Use a base image with C++ development tools, e.g., g++ and make
+FROM gcc:latest
+
+# Install Protocol Buffers (protoc) and any other dependencies required for your project
+RUN apt-get update && apt-get install -y protobuf-compiler
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the entire C++ project directory into the container
+COPY cpp_project /app/cpp_project
+COPY protoTest /app/protoTest
+
+# Change to the project directory
+WORKDIR /app/cpp_project
+
+# Compile the .proto file and generate C++ code
+RUN ls -l /app/protoTest
+RUN protoc \
+    -I=./ \
+    -I=/app/protoTest/protodef/ \
+    --cpp_out=./ \
+    /app/protoTest/protodef/scg_test.proto
+
+# Build the C++ project (if required)
+#RUN make
+RUN g++ -o main main.cpp scg_test.pb.cc \
+		-std=c++17 \
+        -lprotobuf
+
+
+# Set the entry point (modify according to your project requirements)
+CMD ["./main"]
+
